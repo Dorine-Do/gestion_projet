@@ -1,0 +1,22 @@
+{
+  "name": "back",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dorine-Do/gestion_projet.git"
+  },
+  "author": "Jean et Dorine",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dorine-Do/gestion_projet/issues"
+  },
+  "homepage": "https://github.com/Dorine-Do/gestion_projet#readme",
+  "description": "",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
