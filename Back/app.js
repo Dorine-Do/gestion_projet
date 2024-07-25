@@ -1,6 +1,7 @@
 const express = require('express')
 const { addUser, getPasswordByEmail, getAllUsers, getUserById, updateUser, deleteUser, hashPassword } = require('./apiUsers/crudoperations.js');
 const { addCars, getAllCars, getCarsById, updateCars, deleteCars } = require('./apiVoitures/crudvoiture.js')
+const { addPayement, getAllPayements, getPayementById, updatePayement, deletePayement } = require("./apiPayement/crudpayement.js")
 const mariadb = require('mariadb')
 const { create_pool } = require('./apiUsers/connector.js');
 const cors = require('cors');
@@ -62,6 +63,16 @@ const startServer = async () => {
             }
         });
 
+        app.delete('/delete-payement/:id', async (req, res) => {
+            const { id } = req.params;
+            try {
+                const result = await deletePayement(id);
+                res.status(201).json(result);
+            } catch (err) {
+                res.status(500).send(err.message);
+            }
+        });
+
         app.delete('/delete-car/:id', async (req, res) => {
             const { id } = req.params;
             try {
@@ -91,6 +102,16 @@ const startServer = async () => {
             }
         });
 
+        app.get('/payement/:id',async (req,res) => {
+            const { id } = req.params;
+            try{
+                payement = await getPayementById(id)
+                res.json(payement)
+            }catch (err){
+                res.status(500).send(err.message);
+            }
+        });
+
         app.get('/car/:id',async (req,res) => {
             const { id } = req.params;
             try{
@@ -112,11 +133,22 @@ const startServer = async () => {
             }
         });
 
+        app.put('/update-payement/:id', async (req, res) => {
+            const { id } = req.params;
+            const { date_start, end_date, paye, prix_total, id_client, id_car } = req.body;
+            try {
+                const result = await updatePayement(id, date_start, end_date, paye, prix_total, id_client, id_car);
+                res.status(201).json(result);
+            } catch (err) {
+                res.status(500).send(err.message);
+            }
+        });
+
         app.put('/update-car/:id', async (req, res) => {
             const { id } = req.params;
-            const { marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant } = req.body;
+            const { marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant, id_user } = req.body;
             try {
-                const result = await updateCars(id, marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant);
+                const result = await updateCars(id, marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant, id_user);
                 res.status(201).json(result);
             } catch (err) {
                 res.status(500).send(err.message);
@@ -136,7 +168,8 @@ const startServer = async () => {
                     consommation FLOAT NOT NULL,
                     pollution VARCHAR(1),
                     type VARCHAR(255) NOT NULL,
-                    carburant VARCHAR(255) NOT NULL
+                    carburant VARCHAR(255) NOT NULL,
+                    id_user INT NOT NULL
                 )`);
                 res.send('Table created successfully');
                 } catch (err) {
@@ -170,6 +203,30 @@ const startServer = async () => {
             
         });
 
+        app.post('/create-table-payement', async (req, res) => {
+            let conn;
+            try {
+            conn = await pool.getConnection();
+            await conn.query(`CREATE TABLE Payements (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                start_date VARCHAR(255) NOT NULL,
+                end_date VARCHAR(255) NOT NULL,
+                paye VARCHAR(255) NOT NULL,
+                prix_total FLOAT NOT NULL,
+                id_client INT NOT NULL,
+                id_car INT NOT NULL
+            )`);
+
+            res.send('Table created successfully');
+                } catch (err) {
+                console.error(err);
+                res.status(500).send('Error creating table');
+            }finally {
+            if (conn) conn.release();
+            }
+            
+        });
+
         app.post('/add-user', async (req, res) => {
 
             console.log('*********************************************************************')
@@ -185,10 +242,20 @@ const startServer = async () => {
             }
         });
 
-        app.post('/add-car', async (req, res) => {
-            const { marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant} = req.body;
+        app.post('/add-payement', async (req, res) => {
+            const { date_start, end_date, paye, prix_total, id_client, id_car } = req.body;
             try {
-                const result = await addCars(marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant);
+                const result = await addPayement(date_start, end_date, paye, prix_total, id_client, id_car);
+                res.status(201).json(result);
+            } catch (err) {
+                res.status(500).send(err.message);
+            }
+        });
+
+        app.post('/add-car', async (req, res) => {
+            const { marque, description, climatisation, prix, puissance_fiscale, consommation, pollution, type, carburant, id_user} = req.body;
+            try {
+                const result = await addCars(marque, description, climatisation, prix, puissance_fiscale, consommation, pollution, type, carburant, id_user);
                 res.status(201).json(result);
             } catch (err) {
                 res.status(500).send(err.message);
