@@ -17,6 +17,12 @@
   "homepage": "https://github.com/Dorine-Do/gestion_projet#readme",
   "description": "",
   "dependencies": {
-    "express": "^4.19.2"
+    "bcrypt": "^5.0.1",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "mariadb": "^3.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
   }
 }
