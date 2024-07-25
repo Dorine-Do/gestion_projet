@@ -2,12 +2,12 @@ const mariadb = require('mariadb');
 const { create_pool } = require('../apiUsers/connector')
 
 
-const addCars = async (marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant) => {
+const addCars = async (marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant, id_user) => {
     const pool = await create_pool();
     let conn;
     try {
     conn = await pool.getConnection();
-    await conn.query('INSERT INTO Cars (marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant]);
+    await conn.query('INSERT INTO Cars (marque, description, climatisation, prix, puissance_fiscale, consommation, pollution, type, carburant,id_user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant,id_user]);
     } catch (err) {
     console.error(err);
     } finally {
@@ -20,7 +20,7 @@ const getAllCars = async () => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query('SELECT * FROM Cars');
+        const rows = await conn.query('SELECT * FROM Cars LEFT JOIN users ON users.id = Cars.id_user');
         return rows;
     } catch (err) {
         throw new Error('Error fetching Carss: ' + err.message);
@@ -29,12 +29,26 @@ const getAllCars = async () => {
     }
 };
 
+const getCarsByIdUser = async (id) => {
+    const pool = await create_pool();
+    let conn;
+    try{
+        conn = await pool.getConnection();
+        const [row] = await conn.query("SELECT * FROM Cars WHERE id_user = ?",[id]);
+        return row;
+    }catch (err){
+        throw new Error('Error fetching car by id_user :' + err.message);
+    } finally{
+        if (conn) conn.release();
+    }
+}
+
 const getCarsById = async (id) => {
     const pool = await create_pool();
     let conn;
     try {
         conn = await pool.getConnection();
-        const row = await conn.query('SELECT * FROM Cars WHERE id = ?', [id]);
+        const row = await conn.query('SELECT marque, description, climatisation, prix, puissance_fiscale, consommation, pollution, type, carburant, name, lastname FROM Cars LEFT JOIN users ON users.id = Cars.id_user WHERE Cars.id = ?', [id]);
         return row[0]; // Renvoie le premier résultat
     } catch (err) {
         throw new Error('Error fetching Cars: ' + err.message);
@@ -45,12 +59,12 @@ const getCarsById = async (id) => {
 
 
 // Fonction pour mettre à jour un utilisateur
-const updateCars = async (id, marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant) => {
+const updateCars = async (id, marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant, id_user) => {
     const pool = await create_pool();
     let conn;
     try {
     conn = await pool.getConnection();
-    await conn.query('UPDATE Cars SET marque = ?, description= ?, climatisation= ?, prix= ?, puissance_fiscale= ?, consomation= ?, pollution= ?, type= ?, carburan0= ? WHERE id = ?', [marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant, id]);
+    await conn.query('UPDATE Cars SET marque = ?, description= ?, climatisation= ?, prix= ?, puissance_fiscale= ?, consommation= ?, pollution= ?, type= ?, carburan0= ? WHERE id = ?', [marque, description, climatisation, prix, puissance_fiscale, consomation, pollution, type, carburant, id]);
     } catch (err) {
     console.error(err);
     } finally {
@@ -74,6 +88,7 @@ const deleteCars = async (id) => {
 
 module.exports = {
     addCars,
+    getCarsByIdUser,
     getAllCars,
     getCarsById,
     updateCars,

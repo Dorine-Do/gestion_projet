@@ -1,5 +1,6 @@
 const mariadb = require('mariadb');
 const { create_pool } = require('./connector.js');
+const { getCarsByIdUser, deleteCars } = require('../apiVoitures/crudvoiture.js')
 const bcrypt = require('bcrypt');
 const saltRounds = 10; // Nombre de tours pour générer le sel
 
@@ -76,6 +77,17 @@ const deleteUser = async (id) => {
     let conn;
     try {
     conn = await pool.getConnection();
+    const [rows] = await conn.query("SELECT * FROM Cars WHERE id_user = ?",[id]);
+    try{
+    for(let i = 0;i<[rows].length;i++){
+        let id_to_suppr = [rows][i].id;
+        console.log(id_to_suppr);
+        await conn.query('DELETE FROM Cars WHERE id = ?', [id_to_suppr]);
+    }
+    }catch (err){
+        console.error(err)
+        throw err
+    }
     await conn.query('DELETE FROM users WHERE id = ?', [id]);
     } catch (err) {
     console.error(err);
