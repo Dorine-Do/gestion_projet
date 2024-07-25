@@ -14,14 +14,28 @@ const hashPassword = async (plainPassword) => {
     }
 };
 
+const getPasswordByEmail = async (email) =>  {
+    const pool = await create_pool();
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const password = await conn.query('SELECT passwords FROM users WHERE email = ?', [email]);
+        return password;
+    } catch (err) {
+        console.error(err);
+    } finally {
+    if (conn) conn.release();
+    }
+}
+
 const addUser = async (name, lastname, email, telephone, password) => {
     const pool = await create_pool();
     let conn;
     try {
-    conn = await pool.getConnection();
+        conn = await pool.getConnection();
     await conn.query('INSERT INTO users (name, lastname, email, telephone, passwords) VALUES (?, ?, ?, ?, ?)', [name, lastname, email, telephone, password]);
     } catch (err) {
-    console.error(err);
+        console.error(err);
     } finally {
     if (conn) conn.release();
     }
@@ -90,5 +104,6 @@ module.exports = {
     getAllUsers,
     getUserById,
     updateUser,
-    deleteUser
+    deleteUser,
+    getPasswordByEmail
 };

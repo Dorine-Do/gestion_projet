@@ -18,8 +18,11 @@ async function create_pool() {
     };
 
     try {
+
+
         const pool = mariadb.createPool(connexion1);
         // Test the connection
+
         await pool.getConnection();
         return pool;
     } catch (err) {

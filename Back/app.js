@@ -1,12 +1,23 @@
 const express = require('express')
-const { addUser, getAllUsers, getUserById, updateUser, deleteUser, hashPassword } = require('./apiUsers/crudoperations.js');
+const { addUser, getPasswordByEmail, getAllUsers, getUserById, updateUser, deleteUser, hashPassword } = require('./apiUsers/crudoperations.js');
 const { addCars, getAllCars, getCarsById, updateCars, deleteCars } = require('./apiVoitures/crudvoiture.js')
 const mariadb = require('mariadb')
 const { create_pool } = require('./apiUsers/connector.js');
+const cors = require('cors');
+const bcrypt = require('bcrypt');
+
 
 const app = express()
 app.use(express.json());
 const port = 3000
+
+app.use(cors(
+  {  
+    origin: 'http://localhost:3002',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+  }
+));
 
 const startServer = async () => {
     try {
@@ -15,6 +26,26 @@ const startServer = async () => {
         app.get('/', (req, res) => {
         res.send('Hello World!')
         asyncFunction()
+        })
+
+        app.post('/connect', async (req, res) => {
+
+            const { email, passwords } =  req.body;
+            try{
+                const password = await getPasswordByEmail(email);
+                console.log(password[0].passwords)
+                const match = await bcrypt.compare(passwords, password[0].passwords);
+                
+                if (match) {
+                    // Mot de passe correct
+                    res.send('Connexion réussie');
+                } else {
+                    // Mot de passe incorrect
+                    res.status(401).send('Mot de passe incorrect');
+                }
+            }catch (err){
+                res.status(500).send(err.message);
+            }
         })
 
         app.listen(port, () => {
@@ -45,6 +76,15 @@ const startServer = async () => {
             const { id } = req.params;
             try{
                 user = await getUserById(id)
+                res.json(user)
+            }catch (err){
+                res.status(500).send(err.message);
+            }
+        });
+
+        app.get('/cars/',async (req,res) => {
+            try{
+                user = await getAllCars()
                 res.json(user)
             }catch (err){
                 res.status(500).send(err.message);
@@ -131,6 +171,10 @@ const startServer = async () => {
         });
 
         app.post('/add-user', async (req, res) => {
+
+            console.log('*********************************************************************')
+            console.log(req.body)
+
             const { name, lastname, email, telephone, passwords} = req.body;
             const password_hash = await hashPassword(passwords)
             try {
@@ -166,6 +210,7 @@ const startServer = async () => {
             if (conn) conn.release();
         }
         });
+        
     } catch (err){
         console.error('Failed to create pool', err);
         process.exit(1); // Quitter l'application si la connexion échoue
